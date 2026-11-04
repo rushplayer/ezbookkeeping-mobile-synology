@@ -1,5 +1,5 @@
 <template>
-    <v-dialog width="1000" :persistent="loading || submitting || recognizing || isTransactionModified" v-model="showState">
+    <v-dialog width="1000" :persistent="loading || submitting || recognizing || isTransactionModified" v-model="showState" @after-enter="initVisibleMap">
         <two-column-dialog-layout :disabled="loading || submitting || recognizing" :loading="loading"
                                   :title="tt(title)" :cancel-button-title="tt(cancelButtonTitle)"
                                   @cancel="cancel">
@@ -84,8 +84,8 @@
                         </v-tab>
                     </v-tabs>
                 </div>
-                <v-divider class="my-2"/>
-                <div class="px-4">
+                <v-divider class="my-2" v-if="!isUnifiedTransactionDetail"/>
+                <div class="px-4" v-if="!isUnifiedTransactionDetail">
                     <v-tabs direction="vertical" :disabled="loading || submitting || recognizing" v-model="activeTab">
                         <v-tab value="basicInfo">
                             <span>{{ tt('Basic Information') }}</span>
@@ -101,10 +101,12 @@
             </template>
 
             <template #content-right-column>
-                <v-window class="d-flex flex-grow-1 disable-tab-transition w-100-window-container"
+                <component :is="isUnifiedTransactionDetail ? 'div' : VWindow"
+                          class="d-flex flex-grow-1 disable-tab-transition w-100-window-container"
+                          :class="{ 'transaction-detail-content': isUnifiedTransactionDetail }"
                           v-model="activeTab">
-                    <v-window-item value="basicInfo">
-                        <v-form class="my-4">
+                    <component :is="isUnifiedTransactionDetail ? 'div' : VWindowItem" value="basicInfo">
+                        <v-form class="my-4" :class="{ 'transaction-detail-form': isUnifiedTransactionDetail }">
                             <v-row>
                                 <v-col cols="12" v-if="type === TransactionEditPageType.Template && transaction instanceof TransactionTemplate">
                                     <v-text-field
@@ -118,7 +120,7 @@
                                     />
                                 </v-col>
                                 <v-col cols="12" :md="transaction.type === TransactionType.Transfer ? 6 : 12">
-                                    <amount-input class="transaction-edit-amount font-weight-bold"
+                                    <amount-input :density="isUnifiedTransactionDetail ? 'compact' : undefined" class="transaction-edit-amount font-weight-bold"
                                                   :color="sourceAmountColor"
                                                   :currency="sourceAccountCurrency"
                                                   :show-currency="true"
@@ -132,7 +134,7 @@
                                                   v-model="transaction.sourceAmount"/>
                                 </v-col>
                                 <v-col cols="12" :md="6" v-if="transaction.type === TransactionType.Transfer">
-                                    <amount-input class="transaction-edit-amount font-weight-bold" color="primary"
+                                    <amount-input :density="isUnifiedTransactionDetail ? 'compact' : undefined" class="transaction-edit-amount font-weight-bold" color="primary"
                                                   :currency="destinationAccountCurrency"
                                                   :show-currency="true"
                                                   :readonly="mode === TransactionEditPageMode.View"
@@ -144,11 +146,11 @@
                                                   :enable-formula="mode !== TransactionEditPageMode.View"
                                                   v-model="transaction.destinationAmount"/>
                                 </v-col>
-                                <v-col cols="12" md="12" v-if="transaction.type === TransactionType.Expense">
+                                <v-col cols="12" :md="isUnifiedTransactionDetail ? 6 : 12" v-if="transaction.type === TransactionType.Expense">
                                     <v-tooltip :disabled="hasVisibleExpenseCategories" :text="hasVisibleExpenseCategories ? '' : tt('No secondary expense categories are available')">
                                         <template v-slot:activator="{ props }">
                                             <div v-bind="props" class="d-block">
-                                                <two-column-select primary-key-field="id" primary-value-field="id" primary-title-field="name"
+                                                <two-column-select :density="isUnifiedTransactionDetail ? 'compact' : undefined" primary-key-field="id" primary-value-field="id" primary-title-field="name"
                                                                    primary-icon-field="icon" primary-icon-type-field="iconType" primary-icon-type="category" primary-color-field="color"
                                                                    primary-hidden-field="hidden" primary-sub-items-field="subCategories"
                                                                    secondary-key-field="id" secondary-value-field="id" secondary-title-field="name"
@@ -168,11 +170,11 @@
                                         </template>
                                     </v-tooltip>
                                 </v-col>
-                                <v-col cols="12" md="12" v-if="transaction.type === TransactionType.Income">
+                                <v-col cols="12" :md="isUnifiedTransactionDetail ? 6 : 12" v-if="transaction.type === TransactionType.Income">
                                     <v-tooltip :disabled="hasVisibleIncomeCategories" :text="hasVisibleIncomeCategories ? '' : tt('No secondary income categories are available')">
                                         <template v-slot:activator="{ props }">
                                             <div v-bind="props" class="d-block">
-                                                <two-column-select primary-key-field="id" primary-value-field="id" primary-title-field="name"
+                                                <two-column-select :density="isUnifiedTransactionDetail ? 'compact' : undefined" primary-key-field="id" primary-value-field="id" primary-title-field="name"
                                                                    primary-icon-field="icon" primary-icon-type-field="iconType" primary-icon-type="category" primary-color-field="color"
                                                                    primary-hidden-field="hidden" primary-sub-items-field="subCategories"
                                                                    secondary-key-field="id" secondary-value-field="id" secondary-title-field="name"
@@ -196,7 +198,7 @@
                                     <v-tooltip :disabled="hasVisibleTransferCategories" :text="hasVisibleTransferCategories ? '' : tt('No secondary transfer categories are available')">
                                         <template v-slot:activator="{ props }">
                                             <div v-bind="props" class="d-block">
-                                                <two-column-select primary-key-field="id" primary-value-field="id" primary-title-field="name"
+                                                <two-column-select :density="isUnifiedTransactionDetail ? 'compact' : undefined" primary-key-field="id" primary-value-field="id" primary-title-field="name"
                                                                    primary-icon-field="icon" primary-icon-type-field="iconType" primary-icon-type="category" primary-color-field="color"
                                                                    primary-hidden-field="hidden" primary-sub-items-field="subCategories"
                                                                    secondary-key-field="id" secondary-value-field="id" secondary-title-field="name"
@@ -216,11 +218,11 @@
                                         </template>
                                     </v-tooltip>
                                 </v-col>
-                                <v-col cols="12" :md="transaction.type === TransactionType.Transfer ? 6 : 12">
+                                <v-col cols="12" :md="isUnifiedTransactionDetail || transaction.type === TransactionType.Transfer ? 6 : 12">
                                     <v-tooltip :disabled="!!allVisibleAccounts.length" :text="allVisibleAccounts.length ? '' : tt('No available account')">
                                         <template v-slot:activator="{ props }">
                                             <div v-bind="props" class="d-block">
-                                                <two-column-select primary-key-field="id" primary-value-field="category"
+                                                <two-column-select :density="isUnifiedTransactionDetail ? 'compact' : undefined" primary-key-field="id" primary-value-field="category"
                                                                    primary-title-field="name" primary-footer-field="displayBalance"
                                                                    primary-icon-field="icon" primary-icon-type-field="iconType" primary-icon-type="account"
                                                                    primary-sub-items-field="accounts"
@@ -245,7 +247,7 @@
                                     <v-tooltip :disabled="!!allVisibleAccounts.length" :text="allVisibleAccounts.length ? '' : tt('No available account')">
                                         <template v-slot:activator="{ props }">
                                             <div v-bind="props" class="d-block">
-                                                <two-column-select primary-key-field="id" primary-value-field="category"
+                                                <two-column-select :density="isUnifiedTransactionDetail ? 'compact' : undefined" primary-key-field="id" primary-value-field="category"
                                                                    primary-title-field="name" primary-footer-field="displayBalance"
                                                                    primary-icon-field="icon" primary-icon-type-field="iconType" primary-icon-type="account"
                                                                    primary-sub-items-field="accounts"
@@ -267,7 +269,7 @@
                                     </v-tooltip>
                                 </v-col>
                                 <v-col cols="12" md="6" v-if="type === TransactionEditPageType.Transaction">
-                                    <date-time-select
+                                    <date-time-select :density="isUnifiedTransactionDetail ? 'compact' : undefined"
                                         :readonly="mode === TransactionEditPageMode.View"
                                         :disabled="loading || submitting || recognizing || (mode === TransactionEditPageMode.Edit && transaction.type === TransactionType.ModifyBalance)"
                                         :label="tt('Transaction Time')"
@@ -285,7 +287,7 @@
                                         v-model="transaction.scheduledFrequency" />
                                 </v-col>
                                 <v-col cols="12" md="6" v-if="type === TransactionEditPageType.Transaction || (type === TransactionEditPageType.Template && transaction instanceof TransactionTemplate && transaction.templateType === TemplateType.Schedule.type)">
-                                    <v-autocomplete
+                                    <v-autocomplete :density="isUnifiedTransactionDetail ? 'compact' : undefined"
                                         class="transaction-edit-timezone"
                                         item-title="displayNameWithUtcOffset"
                                         item-value="name"
@@ -319,7 +321,7 @@
                                         :no-data-text="tt('No limit')"
                                         v-model="transaction.scheduledEndDate" />
                                 </v-col>
-                                <v-col cols="12" md="12" v-if="type === TransactionEditPageType.Transaction">
+                                <v-col cols="12" md="12" v-if="type === TransactionEditPageType.Transaction && !isUnifiedTransactionDetail">
                                     <v-select
                                         persistent-placeholder
                                         :readonly="mode === TransactionEditPageMode.View"
@@ -342,7 +344,7 @@
                                     </v-select>
                                 </v-col>
                                 <v-col cols="12" md="12">
-                                    <transaction-tag-auto-complete
+                                    <transaction-tag-auto-complete :density="isUnifiedTransactionDetail ? 'compact' : undefined"
                                         :readonly="mode === TransactionEditPageMode.View"
                                         :disabled="loading || submitting || recognizing"
                                         :show-label="true"
@@ -352,11 +354,13 @@
                                     />
                                 </v-col>
                                 <v-col cols="12" md="12">
-                                    <v-textarea
+                                    <v-textarea :density="isUnifiedTransactionDetail ? 'compact' : undefined"
                                         type="text"
                                         autocomplete="off"
                                         persistent-placeholder
-                                        rows="3"
+                                        :rows="isUnifiedTransactionDetail ? 1 : 3"
+                                        :auto-grow="isUnifiedTransactionDetail"
+                                        :no-resize="isUnifiedTransactionDetail"
                                         :readonly="mode === TransactionEditPageMode.View"
                                         :disabled="loading || submitting || recognizing"
                                         :label="transactionDescriptionTitle"
@@ -366,26 +370,14 @@
                                 </v-col>
                             </v-row>
                         </v-form>
-                    </v-window-item>
-                    <v-window-item value="map">
-                        <map-view ref="map" map-class="transaction-edit-map-view mb-3 mb-sm-0"
-                                  :enable-zoom-control="true" :geo-location="transaction.geoLocation"
-                                  @click="updateSpecifiedGeoLocation">
-                            <template #error-title="{ mapSupported, mapDependencyLoaded }">
-                                <span class="text-body-large" v-if="!mapSupported"><b>{{ tt('Unsupported Map Provider') }}</b></span>
-                                <span class="text-body-large" v-else-if="!mapDependencyLoaded"><b>{{ tt('Cannot Initialize Map') }}</b></span>
-                            </template>
-                            <template #error-content>
-                                <span class="text-body-large">
-                                    {{ tt('Please refresh the page and try again. If the error persists, ensure that the server\'s map settings are correctly configured.') }}
-                                </span>
-                            </template>
-                        </map-view>
-                    </v-window-item>
-                    <v-window-item value="pictures">
+                    </component>
+                    <component :is="isUnifiedTransactionDetail ? 'div' : VWindowItem" value="pictures"
+                               :class="{ 'transaction-detail-pictures': isUnifiedTransactionDetail }"
+                               v-if="!isUnifiedTransactionDetail || transaction.pictures?.length">
+                        <div class="text-body-large font-weight-medium" v-if="isUnifiedTransactionDetail">{{ tt('Pictures') }}</div>
                         <v-row class="transaction-pictures align-content-start ma-0 pt-3" :class="{ 'readonly': submitting || uploadingPicture || removingPictureId }">
-                            <v-col :key="picIdx" cols="6" md="3" v-for="(pictureInfo, picIdx) in transaction.pictures">
-                                <v-avatar rounded="lg" variant="tonal" size="160"
+                            <v-col :key="picIdx" :cols="isUnifiedTransactionDetail ? 'auto' : 6" :md="isUnifiedTransactionDetail ? 'auto' : 3" v-for="(pictureInfo, picIdx) in transaction.pictures">
+                                <v-avatar rounded="lg" variant="tonal" :size="isUnifiedTransactionDetail ? 112 : 160"
                                           class="cursor-pointer transaction-picture"
                                           color="rgba(0,0,0,0)" @click="viewOrRemovePicture(pictureInfo)">
                                     <v-img :src="getTransactionPictureUrl(pictureInfo)">
@@ -418,8 +410,32 @@
                                 </v-avatar>
                             </v-col>
                         </v-row>
-                    </v-window-item>
-                </v-window>
+                    </component>
+                    <component :is="isUnifiedTransactionDetail ? 'div' : VWindowItem" value="map"
+                               :class="{ 'transaction-detail-location': isUnifiedTransactionDetail }">
+                        <template v-if="isUnifiedTransactionDetail">
+                            <div class="text-body-large font-weight-medium">{{ tt('Geographic Location') }}</div>
+                            <div class="text-body-medium text-medium-emphasis mt-1 mb-2">
+                                {{ transaction.geoLocation ? formatCoordinate(transaction.geoLocation) : geoLocationStatusInfo }}
+                            </div>
+                        </template>
+                        <map-view ref="map" map-class="transaction-edit-map-view mb-3 mb-sm-0"
+                                  v-if="!isUnifiedTransactionDetail || (transaction.geoLocation && getMapProvider())"
+                                  :height="isUnifiedTransactionDetail ? '220px' : undefined"
+                                  :enable-zoom-control="true" :geo-location="transaction.geoLocation"
+                                  @click="updateSpecifiedGeoLocation">
+                            <template #error-title="{ mapSupported, mapDependencyLoaded }">
+                                <span class="text-body-large" v-if="!mapSupported"><b>{{ tt('Unsupported Map Provider') }}</b></span>
+                                <span class="text-body-large" v-else-if="!mapDependencyLoaded"><b>{{ tt('Cannot Initialize Map') }}</b></span>
+                            </template>
+                            <template #error-content>
+                                <span class="text-body-large">
+                                    {{ tt('Please refresh the page and try again. If the error persists, ensure that the server\'s map settings are correctly configured.') }}
+                                </span>
+                            </template>
+                        </map-view>
+                    </component>
+                </component>
             </template>
 
             <template #footer>
@@ -510,6 +526,7 @@ import ConfirmDialog from '@/components/desktop/ConfirmDialog.vue';
 import SnackBar from '@/components/desktop/SnackBar.vue';
 
 import { ref, computed, useTemplateRef, watch, nextTick } from 'vue';
+import { VWindow, VWindowItem } from 'vuetify/components/VWindow';
 
 import { useI18n } from '@/locales/helpers.ts';
 import {
@@ -686,6 +703,8 @@ const removingPictureId = ref<string>('');
 const pastedText = ref<string>('');
 
 const initOptions = ref<TransactionEditOptions | undefined>(undefined);
+
+const isUnifiedTransactionDetail = computed<boolean>(() => props.type === TransactionEditPageType.Transaction && mode.value === TransactionEditPageMode.View);
 
 const sourceAmountColor = computed<string | undefined>(() => {
     if (transaction.value.type === TransactionType.Expense) {
@@ -1287,13 +1306,15 @@ function onShowDateTimeError(error: string): void {
     snackbar.value?.showError(error);
 }
 
-watch(activeTab, (newValue) => {
-    if (newValue === 'map') {
-        nextTick(() => {
-            map.value?.initMapView();
-        });
+function initVisibleMap(): void {
+    if (showState.value && !loading.value && (isUnifiedTransactionDetail.value || activeTab.value === 'map')) {
+        map.value?.initMapView();
     }
-});
+}
+
+watch([activeTab, loading, isUnifiedTransactionDetail, () => transaction.value.geoLocation], () => {
+    nextTick(initVisibleMap);
+}, { flush: 'post' });
 
 defineExpose({
     open
@@ -1301,6 +1322,37 @@ defineExpose({
 </script>
 
 <style>
+.transaction-detail-content {
+    flex-direction: column;
+    padding-bottom: 16px;
+}
+
+.transaction-detail-form .v-row {
+    row-gap: 0;
+}
+
+.transaction-detail-form .v-row > .v-col {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.transaction-detail-form .v-input__details {
+    display: none;
+}
+
+.transaction-detail-pictures {
+    margin-bottom: 12px;
+}
+
+.transaction-detail-pictures .transaction-pictures {
+    min-height: 0;
+    padding-top: 4px !important;
+}
+
+.transaction-detail-pictures .v-col {
+    padding: 4px;
+}
+
 .transaction-edit-amount .v-field__prepend-inner,
 .transaction-edit-amount .v-field__append-inner,
 .transaction-edit-amount .v-field__field > input {
