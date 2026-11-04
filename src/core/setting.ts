@@ -238,7 +238,7 @@ export const DEFAULT_APPLICATION_SETTINGS: ApplicationSettings = {
     showTotalAmountInTransactionListPage: true,
     totalAmountTypeInTransactionListPage: TransactionAmountType.InflowsAndOutflows,
     showTagInTransactionListPage: true,
-    showPictureIndicatorInTransactionListPage: false,
+    showPictureIndicatorInTransactionListPage: true,
     defaultKeywordMatchModeInTransactionListPage: KeywordMatchMode.Default.type,
     // Transaction Edit Page
     quickSaveButtonStyleInMobileTransactionListPage: TransactionQuickSaveButtonStyle.Default.type,

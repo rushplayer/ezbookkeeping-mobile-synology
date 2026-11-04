@@ -266,14 +266,14 @@
                                                 <div class="transaction-amount" v-if="transaction.sourceAccount"
                                                      :class="{ 'text-expense': transaction.type === TransactionType.Expense, 'text-income': transaction.type === TransactionType.Income }">
                                                     <span>{{ getDisplayAmount(transaction) }}</span>
+                                                    <f7-icon class="transaction-picture-indicator" f7="photo" size="16"
+                                                             :aria-label="tt('Transaction Pictures')" role="img"
+                                                             v-if="showPictureIndicatorInTransactionListPage && transaction.pictures?.length"/>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="item-text">
-                                            <div class="transaction-description" v-if="transaction.comment || (showPictureIndicatorInTransactionListPage && transaction.pictures?.length)">
-                                                <f7-icon class="transaction-picture-indicator" f7="photo" size="16"
-                                                         :aria-label="tt('Transaction Pictures')" role="img"
-                                                         v-if="showPictureIndicatorInTransactionListPage && transaction.pictures?.length"/>
+                                            <div class="transaction-description" v-if="transaction.comment">
                                                 <span>{{ transaction.comment }}</span>
                                             </div>
                                         </div>
@@ -1630,11 +1630,6 @@ html[dir="rtl"] .list.transaction-info-list li.transaction-info .transaction-day
     line-height: 20px;
     padding-top: 2px;
     padding-bottom: 2px;
-
-    > .transaction-picture-indicator {
-        vertical-align: text-bottom;
-        margin-inline-end: 4px;
-    }
 }
 
 .list.transaction-info-list li.transaction-info .chip.transaction-tag {
@@ -1682,6 +1677,11 @@ html[dir="rtl"] .list.transaction-info-list li.transaction-info .transaction-foo
     color: var(--f7-list-item-after-text-color);
     overflow: hidden;
     text-overflow: ellipsis;
+
+    > .transaction-picture-indicator {
+        vertical-align: text-bottom;
+        margin-inline-start: 4px;
+    }
 }
 
 .list.transaction-info-list li.transaction-info .transaction-info .item-after {

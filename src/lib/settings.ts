@@ -48,7 +48,17 @@ export function getApplicationSettings(): ApplicationSettings {
         }
     }
 
-    return Object.assign({}, DEFAULT_APPLICATION_SETTINGS, storedApplicationSettings);
+    const settings = Object.assign({}, DEFAULT_APPLICATION_SETTINGS, storedApplicationSettings);
+    const pictureIndicatorMigrationKey = `${settingsLocalStorageKey}.pictureIndicatorAtAmount`;
+
+    // Enable the new amount-side indicator once, retaining later user preferences.
+    if (!localStorage.getItem(pictureIndicatorMigrationKey)) {
+        settings.showPictureIndicatorInTransactionListPage = true;
+        updateApplicationSettings(settings);
+        localStorage.setItem(pictureIndicatorMigrationKey, '1');
+    }
+
+    return settings;
 }
 
 export function getLocaleDefaultSettings(): LocaleDefaultSettings {

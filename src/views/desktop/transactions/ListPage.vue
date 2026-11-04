@@ -38,7 +38,14 @@
                           v-model="countPerPage"
                 />
             </div>
-            <li class="nav-link" :key="idx" v-for="(recentDateRange, idx) in recentMonthDateRanges">
+            <v-btn-toggle class="d-flex my-2" density="compact" divided mandatory
+                          :disabled="loading" :model-value="dateRangeGranularity"
+                          v-if="pageType !== TransactionListPageType.Calendar.type"
+                          @update:model-value="changeDateRangeGranularity">
+                <v-btn class="flex-grow-1" value="year">{{ tt('granularity.Yearly') }}</v-btn>
+                <v-btn class="flex-grow-1" value="month">{{ tt('granularity.Monthly') }}</v-btn>
+            </v-btn-toggle>
+            <li class="nav-link" :key="idx" v-for="(recentDateRange, idx) in recentDateRanges">
                 <a class="d-flex align-center cursor-pointer my-1"
                    :class="{ 'router-link-active router-link-exact-active': recentDateRangeIndex === idx, 'disabled': loading }"
                    @click="changeDateFilter(recentDateRange)">
@@ -584,11 +591,18 @@
                                         </div>
                                     </td>
                                     <td class="transaction-table-column-amount" :class="{ 'text-expense': transaction.type === TransactionType.Expense, 'text-income': transaction.type === TransactionType.Income }">
-                                        <div v-if="transaction.sourceAccount">
-                                            <span>{{ getDisplayAmount(transaction) }}</span>
-                                            <v-tooltip activator="parent" v-if="!transaction.hideAmount && getDisplayAmountCurrency(transaction) !== userDefaultCurrency">
-                                                {{ getDisplayAmount(transaction, true) }}
-                                            </v-tooltip>
+                                        <div class="d-flex align-center" v-if="transaction.sourceAccount">
+                                            <span>
+                                                {{ getDisplayAmount(transaction) }}
+                                                <v-tooltip activator="parent" v-if="!transaction.hideAmount && getDisplayAmountCurrency(transaction) !== userDefaultCurrency">
+                                                    {{ getDisplayAmount(transaction, true) }}
+                                                </v-tooltip>
+                                            </span>
+                                            <v-icon class="ms-1" size="18" :icon="mdiImageOutline"
+                                                    :aria-label="tt('Transaction Pictures')" role="img"
+                                                    v-if="showPictureIndicatorInTransactionListPage && transaction.pictures?.length">
+                                                <v-tooltip activator="parent">{{ tt('Transaction Pictures') }} ({{ transaction.pictures.length }})</v-tooltip>
+                                            </v-icon>
                                         </div>
                                     </td>
                                     <td class="transaction-table-column-account">
@@ -608,10 +622,6 @@
                                                 v-if="!transaction.tagIds || !transaction.tagIds.length"/>
                                     </td>
                                     <td class="transaction-table-column-description text-truncate">
-                                        <v-icon class="transaction-picture-indicator" size="18" :icon="mdiImageOutline"
-                                                :aria-label="tt('Transaction Pictures')" role="img"
-                                                v-if="showPictureIndicatorInTransactionListPage && transaction.pictures?.length">
-                                        </v-icon>
                                         {{ transaction.comment }}
                                     </td>
                                 </tr>
@@ -775,6 +785,10 @@ import {
     getDayFirstDateTimeBySpecifiedUnixTime,
     getYearMonthFirstUnixTime,
     getYearMonthLastUnixTime,
+    getYearFirstUnixTime,
+    getYearLastUnixTime,
+    getCurrentDateTime,
+    isDateRangeMatchOneMonth,
     getShiftedDateRangeAndDateType,
     getShiftedDateRangeAndDateTypeForBillingCycle,
     getDateTypeByDateRange,
@@ -853,6 +867,7 @@ const {
     tt,
     formatRange,
     getAllRecentMonthDateRanges,
+    formatDateTimeToGregorianLikeLongYear,
     getWeekdayLongName,
     getTablePageOptions
 } = useI18n();
@@ -954,10 +969,33 @@ const showCustomMonthDialog = ref<boolean>(false);
 const showFilterAccountDialog = ref<boolean>(false);
 const showFilterCategoryDialog = ref<boolean>(false);
 const showFilterTagDialog = ref<boolean>(false);
+const dateRangeGranularity = ref<'year' | 'month'>('year');
 
 const isDarkMode = computed<boolean>(() => theme.global.name.value === ThemeType.Dark);
 const allPageCounts = computed<NameNumeralValue[]>(() => getTablePageOptions(DEFAULT_PAGE_COUNTS, undefined, false, true));
-const recentMonthDateRanges = computed<LocalizedRecentMonthDateRange[]>(() => getAllRecentMonthDateRanges(pageType.value === TransactionListPageType.List.type || pageType.value === TransactionListPageType.Gallery.type, true));
+const recentDateRanges = computed<LocalizedRecentMonthDateRange[]>(() => {
+    if (pageType.value === TransactionListPageType.Calendar.type || dateRangeGranularity.value === 'month') {
+        return getAllRecentMonthDateRanges(pageType.value !== TransactionListPageType.Calendar.type, true);
+    }
+
+    const ranges: LocalizedRecentMonthDateRange[] = [{
+        dateType: DateRange.All.type, minTime: 0, maxTime: 0, displayName: tt('All')
+    }];
+    const currentYear = getCurrentDateTime().getGregorianCalendarYear();
+
+    for (let year = currentYear; year > currentYear - 12; year--) {
+        const minTime = getYearFirstUnixTime(year);
+        const maxTime = getYearLastUnixTime(year);
+        ranges.push({
+            dateType: getDateTypeByDateRange(minTime, maxTime, firstDayOfWeek.value, fiscalYearStart.value, DateRangeScene.Normal),
+            minTime, maxTime, year, isPreset: true,
+            displayName: formatDateTimeToGregorianLikeLongYear(parseDateTimeFromUnixTime(minTime))
+        });
+    }
+
+    ranges.push({ dateType: DateRange.Custom.type, minTime: 0, maxTime: 0, displayName: tt('Custom Date') });
+    return ranges;
+});
 
 const allTransactionTemplates = computed<TransactionTemplate[]>(() => {
     const allTemplates = transactionTemplatesStore.allVisibleTemplates;
@@ -1030,13 +1068,13 @@ const transactionsByDay = computed<Record<string, Transaction[]>>(() => {
 });
 
 const recentDateRangeIndex = computed<number>({
-    get: () => getRecentDateRangeIndex(recentMonthDateRanges.value, query.value.dateType, query.value.minTime, query.value.maxTime, firstDayOfWeek.value, fiscalYearStart.value),
+    get: () => getRecentDateRangeIndex(recentDateRanges.value, query.value.dateType, query.value.minTime, query.value.maxTime, firstDayOfWeek.value, fiscalYearStart.value),
     set: (value) => {
-        if (value < 0 || value >= recentMonthDateRanges.value.length) {
+        if (value < 0 || value >= recentDateRanges.value.length) {
             value = 0;
         }
 
-        changeDateFilter(recentMonthDateRanges.value[value] as LocalizedRecentMonthDateRange);
+        changeDateFilter(recentDateRanges.value[value] as LocalizedRecentMonthDateRange);
     }
 });
 
@@ -1230,6 +1268,10 @@ function init(initProps: TransactionListProps): void {
         }
     }
 
+    if (query.value.minTime && query.value.maxTime) {
+        dateRangeGranularity.value = isDateRangeMatchOneMonth(query.value.minTime, query.value.maxTime) ? 'month' : 'year';
+    }
+
     searchKeyword.value = initProps.initKeyword || '';
     currentAmountFilterType.value = '';
 
@@ -1383,6 +1425,19 @@ function changeDateFilter(dateRange: TimeRangeAndDateType | number | null): void
     updateUrlWhenChanged(changed);
 }
 
+function changeDateRangeGranularity(value: 'year' | 'month'): void {
+    dateRangeGranularity.value = value;
+    const anchor = query.value.minTime ? parseDateTimeFromUnixTime(query.value.minTime) : getCurrentDateTime();
+    const year = anchor.getGregorianCalendarYear();
+    const month = anchor.getGregorianCalendarMonth() - 1;
+    const minTime = value === 'year' ? getYearFirstUnixTime(year) : getYearMonthFirstUnixTime({ year, month0base: month });
+    const maxTime = value === 'year' ? getYearLastUnixTime(year) : getYearMonthLastUnixTime({ year, month0base: month });
+    changeDateFilter({
+        dateType: getDateTypeByDateRange(minTime, maxTime, firstDayOfWeek.value, fiscalYearStart.value, DateRangeScene.Normal),
+        minTime, maxTime
+    });
+}
+
 function changeCustomDateFilter(minTime: number, maxTime: number): void {
     if (!minTime || !maxTime) {
         return;
@@ -1450,7 +1505,7 @@ function changeCustomMonthDateFilter(yearMonth: Year0BasedMonth): void {
 }
 
 function shiftDateRange(startTime: number, endTime: number, scale: number): void {
-    if (recentMonthDateRanges.value[recentDateRangeIndex.value]?.dateType === DateRange.All.type) {
+    if (recentDateRanges.value[recentDateRangeIndex.value]?.dateType === DateRange.All.type) {
         return;
     }
 
@@ -1965,12 +2020,6 @@ init(props);
             max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-    }
-
-    .transaction-table-column-description {
-        > .transaction-picture-indicator {
-            vertical-align: text-bottom;
         }
     }
 }

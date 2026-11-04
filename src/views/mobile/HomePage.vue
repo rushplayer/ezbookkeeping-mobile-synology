@@ -4,13 +4,6 @@
             <f7-nav-title :title="tt('global.app.title')"></f7-nav-title>
         </f7-navbar>
 
-        <f7-block class="home-picture-entry" v-if="isTransactionPicturesEnabled()">
-            <f7-button round large fill icon-f7="camera" @click="openPictureSelector">{{ tt('Add Picture') }}</f7-button>
-        </f7-block>
-        <input ref="pictureInput" type="file" class="display-none"
-               :accept="SUPPORTED_IMAGE_EXTENSIONS"
-               @change="onHomePictureSelected" />
-
         <overview-dashboard :layout="layout" :loading="loading" @navigate="onNavigate" />
 
         <f7-toolbar tabbar icons bottom class="main-tabbar">
@@ -97,7 +90,6 @@ import {
     MobileOverviewWidgetNavigationType
 } from '@/core/overview_layout.ts';
 import { TemplateType } from '@/core/template.ts';
-import { SUPPORTED_IMAGE_EXTENSIONS } from '@/consts/file.ts';
 import { MOBILE_OVERVIEW_WIDGET_DEFINITIONS, DEFAULT_MOBILE_OVERVIEW_LAYOUT } from '@/consts/overview_layout.ts';
 
 import { TransactionTemplate } from '@/models/transaction_template.ts';
@@ -116,7 +108,6 @@ import {
 import { isUserLogined, isUserUnlocked } from '@/lib/userstate.ts';
 import { getShareCacheImageBlob } from '@/lib/cache.ts';
 import {
-    isTransactionPicturesEnabled,
     isTransactionFromAITextRecognitionEnabled,
     isTransactionFromAIImageRecognitionEnabled
 } from '@/lib/server_settings.ts';
@@ -138,7 +129,6 @@ const transactionTemplatesStore = useTransactionTemplatesStore();
 const overviewStore = useOverviewStore();
 
 const aiImageRecognitionSheet = useTemplateRef<AIImageRecognitionSheetType>('aiImageRecognitionSheet');
-const pictureInput = useTemplateRef<HTMLInputElement>('pictureInput');
 
 const loading = ref<boolean>(true);
 const showTransactionTemplatePopover = ref<boolean>(false);
@@ -163,25 +153,6 @@ const hasTransactionAddMenuItems = computed<boolean>(() => isTransactionFromAITe
 function openTransactionTemplatePopover(): void {
     if (hasTransactionAddMenuItems.value) {
         showTransactionTemplatePopover.value = true;
-    }
-}
-
-function openPictureSelector(): void {
-    pictureInput.value?.click();
-}
-
-function onHomePictureSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const pictureFile = input.files?.[0];
-
-    input.value = '';
-
-    if (pictureFile) {
-        props.f7router.navigate('/transaction/add', {
-            props: {
-                autoUploadPicture: pictureFile
-            }
-        });
     }
 }
 

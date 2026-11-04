@@ -4,7 +4,8 @@
             <f7-nav-left :class="{ 'disabled': loading }" :back-link="tt('Back')"></f7-nav-left>
             <f7-nav-title :title="tt(title)"></f7-nav-title>
             <f7-nav-right :class="{ 'navbar-compact-icons': true, 'disabled': loading }" v-if="mode !== TransactionEditPageMode.View || transaction.type !== TransactionType.ModifyBalance">
-                <f7-link icon-f7="ellipsis" :aria-label="tt('More')" @click="showMoreActionSheet = true"></f7-link>
+                <f7-link icon-f7="ellipsis" :aria-label="tt('More')" @click="showMoreActionSheet = true"
+                         v-if="pageTypeAndMode?.type !== TransactionEditPageType.Transaction || mode === TransactionEditPageMode.View"></f7-link>
                 <f7-link icon-f7="checkmark_alt" :class="{ 'disabled': inputIsEmpty || submitting || recognizing }" :aria-label="tt('Save')" @click="save(AfterSaveAction.GoBack)" v-if="mode !== TransactionEditPageMode.View"></f7-link>
             </f7-nav-right>
         </f7-navbar>
@@ -690,7 +691,7 @@ const showGeoLocationMapSheet = ref<boolean>(false);
 const showTransactionTagSheet = ref<boolean>(false);
 const showTransactionPictures = ref<boolean>(pageTypeAndMode?.type === TransactionEditPageType.Transaction
     && (pageTypeAndMode?.mode === TransactionEditPageMode.Add || pageTypeAndMode?.mode === TransactionEditPageMode.Edit)
-    && settingsStore.appSettings.alwaysShowTransactionPicturesInMobileTransactionEditPage);
+    && isTransactionPicturesEnabled());
 const showAITextRecognitionSheet = ref<boolean>(false);
 
 const quickSaveButtonStyleType = computed<number>(() => settingsStore.appSettings.quickSaveButtonStyleInMobileTransactionListPage);

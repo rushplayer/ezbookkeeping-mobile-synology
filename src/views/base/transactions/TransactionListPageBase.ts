@@ -47,6 +47,7 @@ import {
 import {
     categoryTypeToTransactionType
 } from '@/lib/category.ts';
+import { isTransactionPicturesEnabled } from '@/lib/server_settings.ts';
 
 export interface TransactionListDisplayTotalAmount {
     incomeIsZero: boolean;
@@ -123,7 +124,7 @@ export function useTransactionListPageBase() {
     const showTotalAmountInTransactionListPage = computed<boolean>(() => settingsStore.appSettings.showTotalAmountInTransactionListPage);
     const totalAmountTypeInTransactionListPage = computed<number>(() => settingsStore.appSettings.totalAmountTypeInTransactionListPage);
     const showTagInTransactionListPage = computed<boolean>(() => settingsStore.appSettings.showTagInTransactionListPage);
-    const showPictureIndicatorInTransactionListPage = computed<boolean>(() => settingsStore.appSettings.showPictureIndicatorInTransactionListPage);
+    const showPictureIndicatorInTransactionListPage = computed<boolean>(() => isTransactionPicturesEnabled() && settingsStore.appSettings.showPictureIndicatorInTransactionListPage);
 
     const allDateRanges = computed<LocalizedDateRange[]>(() => getAllDateRanges(DateRangeScene.Normal, {
         includeCustom: true,
