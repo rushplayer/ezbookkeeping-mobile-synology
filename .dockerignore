@@ -1,0 +1,11 @@
+node_modules
+dist
+.build-cache
+.codebase-memory
+ezbookkeeping-synology-amd64.tar
+ezbookkeeping-synology-amd64.tar.sha256
+.env
+.env.*
+data
+storage
+log

@@ -165,3 +165,9 @@ ezbookkeeping
 /data/
 /storage/
 /log/
+
+# Local mobile UI build and verification artifacts
+/.build-cache/
+/.codebase-memory/
+/ezbookkeeping-synology-amd64.tar
+/ezbookkeeping-synology-amd64.tar.sha256

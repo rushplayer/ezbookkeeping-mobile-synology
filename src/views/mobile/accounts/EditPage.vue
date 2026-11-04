@@ -22,13 +22,15 @@
                 :title="findDisplayNameByType(allAccountCategories, account.category)"
                 @click="showAccountCategorySheet = true"
             >
-                <list-item-selection-sheet value-type="item"
+                <list-item-selection-popup value-type="item"
                                            key-field="type" value-field="type" title-field="displayName"
                                            icon-field="defaultAccountIconId" icon-type="account"
+                                           :title="tt('Account Category')"
+                                           :enable-filter="true" :filter-placeholder="tt('Search')"
                                            :items="allAccountCategories"
                                            v-model:show="showAccountCategorySheet"
                                            v-model="account.category">
-                </list-item-selection-sheet>
+                </list-item-selection-popup>
             </f7-list-item>
 
             <f7-list-item

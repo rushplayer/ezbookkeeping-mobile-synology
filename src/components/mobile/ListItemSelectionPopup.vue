@@ -6,7 +6,7 @@
                     <f7-link popup-close icon-f7="xmark" :aria-label="tt('Close')"></f7-link>
                 </f7-nav-left>
 
-                <f7-searchbar ref="searchbar" custom-searchs
+                <f7-searchbar ref="searchbar" custom-search
                               :value="filterContent"
                               :placeholder="filterPlaceholder"
                               :disable-button="false"

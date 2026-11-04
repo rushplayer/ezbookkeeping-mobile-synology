@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  ezbookkeeping:
+    image: ezbookkeeping:synology-amd64
+    platform: linux/amd64
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    environment:
+      TZ: Asia/Shanghai
+      EBK_SERVER_DOMAIN: ${EBK_SERVER_DOMAIN:?请在 .env 中填写群晖 IP 或域名}
+      EBK_SERVER_ROOT_URL: ${EBK_SERVER_ROOT_URL:?请在 .env 中填写实际访问地址}
+      EBK_SECURITY_SECRET_KEY: ${EBK_SECURITY_SECRET_KEY:?请在 .env 中填写固定随机密钥}
+      EBK_USER_ENABLE_TRANSACTION_PICTURE: 'true'
+    volumes:
+      - ./data:/ezbookkeeping/data
+      - ./storage:/ezbookkeeping/storage
+      - ./log:/ezbookkeeping/log

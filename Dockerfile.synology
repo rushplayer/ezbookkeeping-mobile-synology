@@ -1,0 +1,41 @@
+# Run both compilers natively on Apple Silicon; only the final image is amd64.
+FROM --platform=$BUILDPLATFORM node:26.13.0-alpine3.24 AS backend
+RUN apk add --no-cache git go zig file
+ENV GOTOOLCHAIN=auto
+WORKDIR /build
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/root/go/pkg/mod go mod download
+COPY . .
+RUN --mount=type=cache,target=/root/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
+    CC="zig cc -target x86_64-linux-musl" \
+    go build -mod=readonly -trimpath \
+    -ldflags "-w -s -linkmode external -extldflags '-static' -X main.Version=2.2.0-mobile-ui -X main.CommitHash=$(git rev-parse --short=7 HEAD)" \
+    -o /build/ezbookkeeping ezbookkeeping.go \
+    && file /build/ezbookkeeping | grep 'x86-64.*statically linked'
+
+FROM --platform=$BUILDPLATFORM node:26.13.0-alpine3.24 AS frontend
+WORKDIR /build
+RUN apk add --no-cache git
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
+COPY . .
+RUN npm run build
+
+FROM alpine:3.24.3
+RUN addgroup -S -g 1000 ezbookkeeping \
+    && adduser -S -G ezbookkeeping -u 1000 ezbookkeeping \
+    && apk add --no-cache tzdata \
+    && mkdir -p /ezbookkeeping/data /ezbookkeeping/log /ezbookkeeping/storage \
+    && chown -R 1000:1000 /ezbookkeeping
+COPY --chmod=755 docker/docker-entrypoint.sh /docker-entrypoint.sh
+WORKDIR /ezbookkeeping
+COPY --from=backend --chown=1000:1000 /build/ezbookkeeping ./ezbookkeeping
+COPY --from=frontend --chown=1000:1000 /build/dist ./public
+COPY --chown=1000:1000 conf ./conf
+COPY --chown=1000:1000 templates ./templates
+COPY --chown=1000:1000 LICENSE ./LICENSE
+USER 1000:1000
+EXPOSE 8080
+ENTRYPOINT ["/docker-entrypoint.sh"]
