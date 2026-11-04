@@ -69,35 +69,25 @@
 
             <f7-list-item
                 class="transaction-edit-amount"
-                link="#" no-chevron
                 :class="sourceAmountClass"
                 :header="sourceAmountTitle"
-                :title="getDisplayAmount(parseBigDecimal(transaction.sourceAmount), transaction.hideAmount, sourceAccountCurrency)"
-                @click="showSourceAmountSheet = true"
             >
-                <number-pad-sheet :min-value="TRANSACTION_MIN_AMOUNT"
-                                  :max-value="TRANSACTION_MAX_AMOUNT"
-                                  :currency="sourceAccountCurrency"
-                                  v-model:show="showSourceAmountSheet"
-                                  v-model="transaction.sourceAmount"
-                ></number-pad-sheet>
+                <template #title>
+                    <span v-if="mode === TransactionEditPageMode.View">{{ getDisplayAmount(parseBigDecimal(transaction.sourceAmount), transaction.hideAmount, sourceAccountCurrency) }}</span>
+                    <amount-input v-else :label="sourceAmountTitle" :currency="sourceAccountCurrency" v-model="transaction.sourceAmount" />
+                </template>
             </f7-list-item>
 
             <f7-list-item
                 class="transaction-edit-amount text-color-primary"
-                link="#" no-chevron
                 :class="destinationAmountClass"
                 :header="transferInAmountTitle"
-                :title="getDisplayAmount(parseBigDecimal(transaction.destinationAmount), transaction.hideAmount, destinationAccountCurrency)"
-                @click="showDestinationAmountSheet = true"
                 v-if="transaction.type === TransactionType.Transfer"
             >
-                <number-pad-sheet :min-value="TRANSACTION_MIN_AMOUNT"
-                                  :max-value="TRANSACTION_MAX_AMOUNT"
-                                  :currency="destinationAccountCurrency"
-                                  v-model:show="showDestinationAmountSheet"
-                                  v-model="transaction.destinationAmount"
-                ></number-pad-sheet>
+                <template #title>
+                    <span v-if="mode === TransactionEditPageMode.View">{{ getDisplayAmount(parseBigDecimal(transaction.destinationAmount), transaction.hideAmount, destinationAccountCurrency) }}</span>
+                    <amount-input v-else :label="transferInAmountTitle" :currency="destinationAccountCurrency" v-model="transaction.destinationAmount" />
+                </template>
             </f7-list-item>
 
             <f7-list-item
@@ -521,6 +511,8 @@
 </template>
 
 <script setup lang="ts">
+import AmountInput from '@/components/mobile/AmountInput.vue';
+
 import { ref, computed, useTemplateRef } from 'vue';
 import type { PhotoBrowser, Router } from 'framework7/types';
 
@@ -678,8 +670,6 @@ const showQuickSavePopover = ref<boolean>(false);
 const showTimezonePopup = ref<boolean>(false);
 const showGeoLocationActionSheet = ref<boolean>(false);
 const showMoreActionSheet = ref<boolean>(false);
-const showSourceAmountSheet = ref<boolean>(false);
-const showDestinationAmountSheet = ref<boolean>(false);
 const showCategorySheet = ref<boolean>(false);
 const showSourceAccountSheet = ref<boolean>(false);
 const showDestinationAccountSheet = ref<boolean>(false);
@@ -1496,6 +1486,7 @@ init();
 }
 
 .transaction-edit-amount .item-title {
+    width: 100%;
     font-weight: bolder;
 }
 

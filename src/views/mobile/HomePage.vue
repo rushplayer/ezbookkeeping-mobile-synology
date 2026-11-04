@@ -1,5 +1,5 @@
 <template>
-    <f7-page ptr @ptr:refresh="reload" @page:afterin="onPageAfterIn">
+    <f7-page class="mobile-home-page" @page:afterin="onPageAfterIn">
         <f7-navbar>
             <f7-nav-title :title="tt('global.app.title')"></f7-nav-title>
         </f7-navbar>
@@ -185,24 +185,14 @@ function init(): void {
     }
 }
 
-function reload(done?: () => void): void {
-    const force = !!done;
-    const promises: Promise<unknown>[] = reloadOverviewData(force);
+function reload(): void {
+    const promises: Promise<unknown>[] = reloadOverviewData(false);
 
     if (promises.length < 1) {
-        done?.();
         return;
     }
 
-    Promise.all(promises).then(() => {
-        done?.();
-
-        if (force) {
-            showToast('Data has been updated');
-        }
-    }).catch(error => {
-        done?.();
-
+    Promise.all(promises).catch(error => {
         if (!error.processed) {
             showToast(error.message || error);
         }
@@ -435,6 +425,10 @@ init();
     width: var(--ebk-big-icon-button-size);
     height: var(--ebk-big-icon-button-size);
     line-height: var(--ebk-big-icon-button-size);
+}
+
+.mobile-home-page > .page-content {
+    overscroll-behavior-y: none;
 }
 
 .template-popover-menu .popover-inner {

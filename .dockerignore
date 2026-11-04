@@ -4,6 +4,7 @@ dist
 .codebase-memory
 ezbookkeeping-synology-amd64.tar
 ezbookkeeping-synology-amd64.tar.sha256
+ezbookkeeping-synology-amd64-*.tar*
 .env
 .env.*
 data

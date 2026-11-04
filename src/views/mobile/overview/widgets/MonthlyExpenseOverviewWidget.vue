@@ -78,9 +78,9 @@ const cardHeaderStyle = computed<Record<string, string>>(() => {
     if (props.height === 1) {
         finalStyle['padding-top'] = '10px';
     } else if (props.height === 2) {
-        finalStyle['padding-top'] = '60px';
+        finalStyle['padding-top'] = '16px';
     } else {
-        finalStyle['padding-top'] = '120px';
+        finalStyle['padding-top'] = '24px';
     }
 
     return finalStyle;

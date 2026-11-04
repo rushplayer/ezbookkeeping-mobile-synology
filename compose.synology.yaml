@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   ezbookkeeping:
-    image: ezbookkeeping:synology-amd64
+    image: ezbookkeeping:synology-amd64-20261104-r3
     platform: linux/amd64
     restart: unless-stopped
     ports:
