@@ -27,7 +27,9 @@
 | `.env.synology.example` | 群晖访问地址与固定密钥的配置模板，复制为 `.env` 后填写 |
 | `SYNOLOGY.md` | 镜像导入、目录权限、启动、升级与校验说明 |
 
-容器映像名：`ezbookkeeping:synology-amd64`。容器内端口为 `8080`，运行身份为 UID/GID `1000:1000`。手机入口为 `http://群晖IP:8080/mobile.html`。图片功能需要正确配置浏览器实际访问的 `EBK_SERVER_ROOT_URL`。
+容器映像名：`ezbookkeeping:synology-amd64`。容器内端口为 `8080`，运行身份为 UID/GID `1000:1000`。手机入口为 `http://群晖IP:8080/mobile`，桌面入口为 `/desktop`。图片功能需要正确配置浏览器实际访问的 `EBK_SERVER_ROOT_URL`。
+
+现成镜像见 **[最新版本下载](https://github.com/rushplayer/ezbookkeeping-mobile-synology/releases/latest)**，下载附件 `ezbookkeeping-synology-amd64.tar` 后在 Container Manager 中从文件导入。
 
 源码仓库不包含本地构建的镜像 tar、基础镜像归档、`node_modules`、数据库、上传图片或实际 `.env`。下载源码后可按下文重建；已有的本地交付文件仍保留在开发目录。
 
@@ -45,13 +47,13 @@ docker buildx build --platform linux/amd64 --file Dockerfile.synology \
 
 ## 已完成的验证
 
-- Vue 类型检查及修改过的界面文件的 ESLint 检查通过。
+- Vue 类型检查、修改文件的 ESLint 检查及 82 项日期与偏好迁移测试通过。
 - 前端生产构建和 PWA 构建通过。
-- 在 320 px、390 px 手机宽度下检查账户与分类选择器的布局和交互。
-- 本次修正后的镜像已完成构建，归档架构检查为 `linux/amd64`。
-- 此前镜像在 M4 的 amd64 临时容器中验证服务启动、SQLite 初始化、账户与类别创建、图片上传、带图交易保存以及交易和图片读回；本次仅调整入口显示，类型、静态检查和生产构建已通过。
+- 在 320 px、390 px 手机宽度下检查金额旁照片标记；交易表单保留标签、直接显示原图片区域，隐藏新增交易右上角的「…」。账户与分类全屏选择器也已检查。
+- 最终镜像归档平台为 `linux/amd64`；桌面页面已验证照片数量提示、全年筛选、上一年切换，以及 16 笔全年交易按 15 + 1 分页。
+- 在 M4 的 amd64 临时容器中验证服务启动、SQLite 初始化、图片上传、带图交易保存与图片读回，以及 HTTPS 汇率请求。
 
-本次新 tar 的容器界面实测因本地导入审批超时未完成。
+M4 模拟 x86 运行时曾在 HTTPS 证书处理处崩溃；临时测试容器使用 `GODEBUG=cpu.all=off` 后通过上述接口和页面检查。该参数仅用于本机模拟测试，未写入镜像。
 
 尚未在实际群晖设备上部署验证。迁移已有实例前应备份数据，沿用原来的数据库、图片存储和固定密钥，具体见部署说明。
 

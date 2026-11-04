@@ -9,7 +9,7 @@
 1. 先停止旧容器并备份原数据库、图片和配置。确认数据和自定义配置已挂载到 NAS 目录；若只存在旧容器内部，先导出再重建。
 2. 在 Container Manager → 映像 → 新增 → 从文件新增，导入 tar，得到 `ezbookkeeping:synology-amd64`。
 3. 用该映像重建原服务，沿用原来的端口、目录挂载、环境变量、自定义配置、启动命令和网络。原来的密钥、访问地址和数据库设置都继续使用。
-4. 启动后，用原来的地址登录；手机刷新 `mobile.html`。
+4. 启动后，用原来的地址登录；手机入口为 `/mobile`，桌面入口为 `/desktop`。
 
 若原服务由 Container Manager「项目」管理，只修改原项目 YAML 的这一项，再重新部署项目：
 
@@ -38,7 +38,7 @@ image: ezbookkeeping:synology-amd64
 3. 将 `.env.synology.example` 复制为 `.env`，填写群晖 IP/域名、实际访问 URL 和自己的固定随机密钥。可在电脑终端运行 `openssl rand -hex 32` 生成密钥，再填入 `.env`。URL 以 `/` 结尾；经过反向代理访问时，填浏览器实际使用的 HTTPS URL。
 4. 在项目目录内建立 `data`、`storage`、`log` 三个子目录。容器使用 UID/GID `1000:1000`，这些目录须允许该身份写入。可用 DSM 权限设置；使用 SSH 的管理员也可在确认目录正确后运行下方命令。
 5. Container Manager → 项目 → 新增，选择该项目目录，使用现有 `compose.synology.yaml`（或将其复制为 `compose.yaml`），构建并启动。
-6. 手机浏览器访问 `http://群晖IP:8080/mobile.html`，注册/登录后使用。若 8080 已被占用，只修改端口映射左侧，如 `18080:8080`，并同步修改 `.env` 的 URL。
+6. 手机浏览器访问 `http://群晖IP:8080/mobile`，注册/登录后使用。若 8080 已被占用，只修改端口映射左侧，如 `18080:8080`，并同步修改 `.env` 的 URL。
 
 新建目录的 SSH 示例（路径需对应自己的项目目录）：
 
@@ -69,14 +69,14 @@ docker compose -f compose.synology.yaml up -d
 - 更新镜像前，停止旧实例并备份原数据库、图片和配置。迁移时应沿用原来的数据挂载、数据库类型和 `secret_key`；本示例是新建 SQLite 实例的配置，不能直接代替已有 MySQL/PostgreSQL 或自定义配置。
 - 避免新旧容器同时写同一个 SQLite 数据库。不要用空目录覆盖原数据挂载，也不要删除原图片目录。
 - 图片加载依赖正确的 `EBK_SERVER_ROOT_URL`。更换访问地址后同步更新它。
-- 升级后若手机仍显示旧界面，刷新并清除该站点的 PWA/离线缓存，再访问 `mobile.html`。
+- 升级后若手机仍显示旧界面，刷新并清除该站点的 PWA/离线缓存，再访问 `/mobile`。
 
 ## 校验与重建
 
 本次交付 tar 的 SHA-256 为：
 
 ```text
-d20f976e87926bc718ed8509ffabc11cb38941519d9ec4d42421df54959a2d93
+4ab3b9413d58ea8635d3b97e915b47023b8b6f2f84134914ee24c5475b3cf0ef
 ```
 
 传输后可计算并与上值核对（重新构建后哈希会改变）：
@@ -89,7 +89,7 @@ macOS 可使用 `shasum -a 256 ezbookkeeping-synology-amd64.tar`。
 
 在源码目录重建：
 
-本次验证后已停止临时容器和 Colima 环境以释放内存；在这台 M4 上重建前先运行 `colima start --profile ezbookkeep`。
+在这台 M4 上使用本工程的 Colima 构建环境时，重建前先运行 `colima start --profile ezbookkeep`。
 
 ```sh
 docker buildx build --platform linux/amd64 --file Dockerfile.synology \
@@ -101,7 +101,9 @@ docker buildx build --platform linux/amd64 --file Dockerfile.synology \
 
 M4 可以构建此 x86 镜像：前端和 Go 编译器在 ARM 原生运行，Go + Zig 将包含 SQLite CGO 的后端交叉编译为静态链接的 x86-64 程序，最终打包为 amd64 Alpine 镜像。源码、下载的基础镜像归档和交付文件位于 `/Users/k/code/ezbookkeep`，基础镜像归档在 `.build-cache/`；Docker/Colima 自身的运行环境和构建层另由容器引擎管理。
 
-此前镜像已在 M4 的 amd64 临时容器中验证服务启动、SQLite 初始化、图片上传、带图交易保存及图片读回。本次仅修正交易页入口显示与恢复首页，类型检查、修改文件的 ESLint 检查及生产构建已通过；本次新 tar 的容器界面实测因本地导入审批超时未完成。尚未在实际群晖设备上运行。
+最终镜像已在本机 amd64 临时容器中检查交易表单、金额旁照片标记、照片数量提示、全年筛选、上一年切换及全年交易分页。类型检查、修改文件的 ESLint、82 项日期与偏好迁移测试、前端/PWA 生产构建通过；SQLite 与图片上传保存读回流程也已验证。
+
+M4 模拟 x86 运行时曾在 HTTPS 证书处理处崩溃，测试容器以 `GODEBUG=cpu.all=off` 禁用 CPU 加速后，HTTPS 汇率请求与页面检查通过。此参数仅用于本机模拟测试，未加入群晖镜像。尚未在实际群晖设备上运行。
 
 ## 旧配置启动报错
 
