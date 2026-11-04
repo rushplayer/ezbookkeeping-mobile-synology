@@ -15,6 +15,8 @@
 
 完整操作见 **[群晖部署说明](SYNOLOGY.md)**。
 
+**群晖已经运行 ezBookkeeping 时，只需导入定制镜像并替换原服务的映像，原端口、数据目录和配置继续使用，无须新建 `.env` 或重新填写设置。** 项目部署只将原 YAML 中的 `image` 改为 `ezbookkeeping:synology-amd64`。新装示例仅供从零部署，不能覆盖已有配置。
+
 | 文件 | 用途 |
 | --- | --- |
 | `Dockerfile.synology` | 在 Apple Silicon 上交叉构建 `linux/amd64` 镜像 |

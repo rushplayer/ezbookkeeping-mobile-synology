@@ -2,6 +2,25 @@
 
 本次镜像：`ezbookkeeping:synology-amd64`，平台 `linux/amd64`，适用于 Intel/AMD x86_64 群晖的 Container Manager / Docker。基于官方 main 分支 `ec33570`（2.2.0），后端版本标记为 `2.2.0-mobile-ui`。
 
+## 已有 ezBookkeeping：沿用设置，只替换镜像
+
+如果群晖上已经运行 ezBookkeeping，直接使用 `ezbookkeeping-synology-amd64.tar` 即可。下面的新装 Compose 和 `.env` 示例只供新建实例使用，现有实例无须重新配置。
+
+1. 先停止旧容器并备份原数据库、图片和配置。确认数据和自定义配置已挂载到 NAS 目录；若只存在旧容器内部，先导出再重建。
+2. 在 Container Manager → 映像 → 新增 → 从文件新增，导入 tar，得到 `ezbookkeeping:synology-amd64`。
+3. 用该映像重建原服务，沿用原来的端口、目录挂载、环境变量、自定义配置、启动命令和网络。原来的密钥、访问地址和数据库设置都继续使用。
+4. 启动后，用原来的地址登录；手机刷新 `mobile.html`。
+
+若原服务由 Container Manager「项目」管理，只修改原项目 YAML 的这一项，再重新部署项目：
+
+```yaml
+image: ezbookkeeping:synology-amd64
+```
+
+其余项目配置保持原样，使用刚导入的本地映像。不要将本文件的新装示例覆盖到现有项目上。
+
+本镜像沿用官方映像的运行身份 `1000:1000`、内部端口 `8080`、工作目录 `/ezbookkeeping` 和官方启动脚本，继续支持 `EBK_CONF_PATH` 与原有 `EBK_...` 环境变量。数据库、图片和配置的挂载位置与官方映像一致。不同旧版本升级时仍应先保留备份。
+
 ## 界面变化
 
 - 移动端首页顶部默认显示「添加图片」。选择或拍摄图片后进入新增交易，并自动上传到该交易的图片区域；仍需填写并保存交易。服务器开启交易图片功能时显示。
@@ -9,7 +28,7 @@
 - 交易分类选择改为全屏树形列表，支持搜索和一级/二级分类。
 - 编辑账户时的「账户类别」改用完整弹窗列表，支持搜索。
 
-## Container Manager 图形界面
+## 新建实例：Container Manager 图形界面
 
 1. 在群晖新建一个目录，例如 `/volume1/docker/ezbookkeep-mobile`。将 `ezbookkeeping-synology-amd64.tar`、`compose.synology.yaml` 和 `.env.synology.example` 复制到该目录。
 2. 在 Container Manager → 映像 → 新增 → 从文件新增，导入 tar。导入后映像名应为 `ezbookkeeping:synology-amd64`。此映像只需本地导入，不需要推送或从仓库拉取。
@@ -28,7 +47,7 @@ sudo chown -R 1000:1000 data storage log
 
 如果项目向导未读取 `.env`，可将 Compose 的三个 `${…}` 值替换为自己的实际值；密钥应妥善保存。
 
-## SSH 导入与启动
+## 新建实例：SSH 导入与启动
 
 在上述目录和 `.env` 已准备好后：
 
