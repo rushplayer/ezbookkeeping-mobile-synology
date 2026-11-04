@@ -46,9 +46,9 @@
                 <v-btn class="flex-grow-1" value="month">{{ tt('granularity.Monthly') }}</v-btn>
             </v-btn-toggle>
             <li class="nav-link" :key="idx" v-for="(recentDateRange, idx) in recentDateRanges">
-                <a class="d-flex align-center cursor-pointer my-1"
+                <a href="#" class="d-flex align-center cursor-pointer my-1"
                    :class="{ 'router-link-active router-link-exact-active': recentDateRangeIndex === idx, 'disabled': loading }"
-                   @click="changeDateFilter(recentDateRange)">
+                   @click.prevent="changeDateFilter(recentDateRange)">
                     <span class="nav-item-title text-truncate">{{ recentDateRange.displayName }}</span>
                 </a>
             </li>
@@ -598,11 +598,11 @@
                                                     {{ getDisplayAmount(transaction, true) }}
                                                 </v-tooltip>
                                             </span>
-                                            <v-icon class="ms-1" size="18" :icon="mdiImageOutline"
-                                                    :aria-label="tt('Transaction Pictures')" role="img"
-                                                    v-if="showPictureIndicatorInTransactionListPage && transaction.pictures?.length">
+                                            <span class="d-inline-flex ms-1" :aria-label="tt('Transaction Pictures')" role="img"
+                                                  v-if="showPictureIndicatorInTransactionListPage && transaction.pictures?.length">
+                                                <v-icon size="18" :icon="mdiImageOutline" />
                                                 <v-tooltip activator="parent">{{ tt('Transaction Pictures') }} ({{ transaction.pictures.length }})</v-tooltip>
-                                            </v-icon>
+                                            </span>
                                         </div>
                                     </td>
                                     <td class="transaction-table-column-account">
