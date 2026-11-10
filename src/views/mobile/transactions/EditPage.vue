@@ -56,7 +56,7 @@
             <f7-list-input type="textarea" label="Description" placeholder="Your transaction description (optional)"></f7-list-input>
         </f7-list>
 
-        <f7-list form strong inset dividers class="margin-vertical-half" v-else-if="!loading">
+        <f7-list form strong inset dividers class="margin-vertical-half" :class="{ 'transaction-edit-ordered-list': pageTypeAndMode?.type === TransactionEditPageType.Transaction }" v-else-if="!loading">
             <f7-list-input
                 type="text"
                 autocomplete="off"
@@ -187,7 +187,7 @@
             </f7-list-item>
 
             <f7-list-item
-                class="list-item-with-header-and-title"
+                class="list-item-with-header-and-title transaction-edit-ordered-account"
                 link="#" no-chevron
                 :class="{ 'disabled': !allVisibleAccounts.length || (mode === TransactionEditPageMode.Edit && transaction.type === TransactionType.ModifyBalance), 'readonly': mode === TransactionEditPageMode.View }"
                 :header="tt(sourceAccountTitle)"
@@ -210,7 +210,7 @@
             </f7-list-item>
 
             <f7-list-item
-                class="list-item-with-header-and-title"
+                class="list-item-with-header-and-title transaction-edit-ordered-account"
                 link="#" no-chevron
                 :class="{ 'disabled': !allVisibleAccounts.length, 'readonly': mode === TransactionEditPageMode.View }"
                 :header="tt('Destination Account')"
@@ -234,7 +234,7 @@
             </f7-list-item>
 
             <f7-list-item
-                class="transaction-edit-datetime list-item-with-header-and-title"
+                class="transaction-edit-datetime list-item-with-header-and-title transaction-edit-ordered-time"
                 link="#" no-chevron
                 :class="{ 'disabled': mode === TransactionEditPageMode.Edit && transaction.type === TransactionType.ModifyBalance, 'readonly': mode === TransactionEditPageMode.View && transaction.utcOffset === currentTimezoneOffsetMinutes }"
                 v-if="pageTypeAndMode?.type === TransactionEditPageType.Transaction"
@@ -301,7 +301,7 @@
             <f7-list-item
                 :no-chevron="mode === TransactionEditPageMode.View"
                 link="#"
-                class="list-item-with-header-and-title list-item-title-hide-overflow list-item-no-item-after"
+                class="list-item-with-header-and-title list-item-title-hide-overflow list-item-no-item-after transaction-edit-ordered-timezone"
                 :class="{ 'disabled': mode === TransactionEditPageMode.Edit && transaction.type === TransactionType.ModifyBalance, 'readonly': mode === TransactionEditPageMode.View }"
                 :header="tt('Transaction Timezone')"
                 v-if="pageTypeAndMode?.type === TransactionEditPageType.Transaction || (pageTypeAndMode?.type === TransactionEditPageType.Template && transaction instanceof TransactionTemplate && transaction.templateType === TemplateType.Schedule.type)"
@@ -330,7 +330,7 @@
 
             <f7-list-item
                 link="#" no-chevron
-                class="list-item-with-header-and-title list-item-title-hide-overflow"
+                class="list-item-with-header-and-title list-item-title-hide-overflow transaction-edit-ordered-location"
                 :class="{ 'readonly': mode === TransactionEditPageMode.View && !transaction.geoLocation }"
                 :header="tt('Geographic Location')"
                 @click="showGeoLocationActionSheet = true"
@@ -351,6 +351,7 @@
             </f7-list-item>
 
             <f7-list-item
+                class="transaction-edit-ordered-tags"
                 link="#" no-chevron
                 :class="{ 'readonly': mode === TransactionEditPageMode.View }"
                 :header="tt('Tags')"
@@ -380,6 +381,7 @@
             </f7-list-item>
 
             <f7-list-item
+                class="transaction-edit-ordered-pictures"
                 link="#" no-chevron
                 :header="tt('Pictures')"
                 v-if="showTransactionPictures || (transaction.pictures && transaction.pictures.length > 0)"
@@ -421,7 +423,7 @@
 
             <f7-list-input
                 type="textarea"
-                class="transaction-edit-comment"
+                class="transaction-edit-comment transaction-edit-ordered-description"
                 style="height: auto"
                 autocomplete="off"
                 :class="{ 'readonly': mode === TransactionEditPageMode.View }"
@@ -1492,6 +1494,39 @@ init();
 
 .transaction-edit-amount .item-header {
     padding-top: calc(var(--f7-typography-padding) / 2);
+}
+
+.transaction-edit-ordered-list > ul {
+    display: flex;
+    flex-direction: column;
+}
+
+.transaction-edit-ordered-time {
+    order: 1;
+}
+
+.transaction-edit-ordered-description {
+    order: 2;
+}
+
+.transaction-edit-ordered-location {
+    order: 3;
+}
+
+.transaction-edit-ordered-pictures {
+    order: 4;
+}
+
+.transaction-edit-ordered-account {
+    order: 5;
+}
+
+.transaction-edit-ordered-tags {
+    order: 6;
+}
+
+.transaction-edit-ordered-timezone {
+    order: 7;
 }
 
 .transaction-edit-datetime .item-title {

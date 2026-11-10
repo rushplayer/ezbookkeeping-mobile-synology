@@ -1,20 +1,20 @@
 # 群晖 x86_64 部署
 
-本次镜像：`ezbookkeeping:synology-amd64-20261110-r8`，平台 `linux/amd64`，适用于 Intel/AMD x86_64 群晖的 Container Manager / Docker。基于官方 main 分支 `ec33570`（2.2.0），后端版本标记为 `2.2.0-mobile-ui-r8`。
+本次镜像：`ezbookkeeping:synology-amd64-20261110-r9`，平台 `linux/amd64`，适用于 Intel/AMD x86_64 群晖的 Container Manager / Docker。基于官方 main 分支 `ec33570`（2.2.0），后端版本标记为 `2.2.0-mobile-ui-r9`。
 
 ## 已有 ezBookkeeping：沿用设置，只替换镜像
 
-如果群晖上已经运行 ezBookkeeping，直接使用 `ezbookkeeping-synology-amd64-20261110-r8.tar` 即可。下面的新装 Compose 和 `.env` 示例只供新建实例使用，现有实例无须重新配置。
+如果群晖上已经运行 ezBookkeeping，直接使用 `ezbookkeeping-synology-amd64-20261110-r9.tar` 即可。下面的新装 Compose 和 `.env` 示例只供新建实例使用，现有实例无须重新配置。
 
 1. 先停止旧容器并备份原数据库、图片和配置。确认数据和自定义配置已挂载到 NAS 目录；若只存在旧容器内部，先导出再重建。
-2. 在 Container Manager → 映像 → 新增 → 从文件新增，导入 tar，得到 `ezbookkeeping:synology-amd64-20261110-r8`。
+2. 在 Container Manager → 映像 → 新增 → 从文件新增，导入 tar，得到 `ezbookkeeping:synology-amd64-20261110-r9`。
 3. 用该映像重建原服务，沿用原来的端口、目录挂载、环境变量、自定义配置、启动命令和网络。原来的密钥、访问地址和数据库设置都继续使用。
-4. 启动后，用原来的地址登录；手机入口为 `/mobile`，桌面入口为 `/desktop`。在容器详情中核对映像标签带有 `20261110-r8`；仅导入映像不会自动替换已经运行的旧容器。
+4. 启动后，用原来的地址登录；手机入口为 `/mobile`，桌面入口为 `/desktop`。在容器详情中核对映像标签带有 `20261110-r9`；仅导入映像不会自动替换已经运行的旧容器。
 
 若原服务由 Container Manager「项目」管理，只修改原项目 YAML 的这一项，再重新部署项目：
 
 ```yaml
-image: ezbookkeeping:synology-amd64-20261110-r8
+image: ezbookkeeping:synology-amd64-20261110-r9
 ```
 
 其余项目配置保持原样，使用刚导入的本地映像。不要将本文件的新装示例覆盖到现有项目上。
@@ -23,8 +23,9 @@ image: ezbookkeeping:synology-amd64-20261110-r8
 
 ## 界面变化
 
-- **r7 手机 dock**：移动端根视图改用动态可视视口高度，避免 iPhone 浏览器界面变化时把底部 dock 裁切。
+- **r9 手机交易表单**：分类之后按交易时间、描述、地理位置、图片、账户、标签、交易时区从上到下排列。
 - **r8 电脑交易详情**：账单分类之后按交易时间、描述、地理位置、图片、账户、标签、交易时区纵向排列；新增和编辑表单沿用原布局。
+- **r7 手机 dock**：移动端根视图改用动态可视视口高度，避免 iPhone 浏览器界面变化时把底部 dock 裁切。
 - **r6 手机首页**：移除首页顶部居中的应用名文字，保留 navbar 容器和固定底部 dock。
 - **r4 电脑交易详情**：基本信息、图片、地理位置同页显示，去掉三项分页；分类与账户并排、收紧行距、描述按内容展开。照片直接显示缩略图并保留点击查看大图，有位置显示地图，无位置用短提示。保留交易类型、标签及编辑/删除/复制；手机端和新增/编辑布局沿用 r3。
 
@@ -39,8 +40,8 @@ image: ezbookkeeping:synology-amd64-20261110-r8
 
 ## 新建实例：Container Manager 图形界面
 
-1. 在群晖新建一个目录，例如 `/volume1/docker/ezbookkeep-mobile`。将 `ezbookkeeping-synology-amd64-20261110-r8.tar`、`compose.synology.yaml` 和 `.env.synology.example` 复制到该目录。
-2. 在 Container Manager → 映像 → 新增 → 从文件新增，导入 tar。导入后映像名应为 `ezbookkeeping:synology-amd64-20261110-r8`。此映像只需本地导入，不需要推送或从仓库拉取。
+1. 在群晖新建一个目录，例如 `/volume1/docker/ezbookkeep-mobile`。将 `ezbookkeeping-synology-amd64-20261110-r9.tar`、`compose.synology.yaml` 和 `.env.synology.example` 复制到该目录。
+2. 在 Container Manager → 映像 → 新增 → 从文件新增，导入 tar。导入后映像名应为 `ezbookkeeping:synology-amd64-20261110-r9`。此映像只需本地导入，不需要推送或从仓库拉取。
 3. 将 `.env.synology.example` 复制为 `.env`，填写群晖 IP/域名、实际访问 URL 和自己的固定随机密钥。可在电脑终端运行 `openssl rand -hex 32` 生成密钥，再填入 `.env`。URL 以 `/` 结尾；经过反向代理访问时，填浏览器实际使用的 HTTPS URL。
 4. 在项目目录内建立 `data`、`storage`、`log` 三个子目录。容器使用 UID/GID `1000:1000`，这些目录须允许该身份写入。可用 DSM 权限设置；使用 SSH 的管理员也可在确认目录正确后运行下方命令。
 5. Container Manager → 项目 → 新增，选择该项目目录，使用现有 `compose.synology.yaml`（或将其复制为 `compose.yaml`），构建并启动。
@@ -61,8 +62,8 @@ sudo chown -R 1000:1000 data storage log
 在上述目录和 `.env` 已准备好后：
 
 ```sh
-docker load --input ezbookkeeping-synology-amd64-20261110-r8.tar
-docker image inspect ezbookkeeping:synology-amd64-20261110-r8 --format '{{.Os}}/{{.Architecture}}'
+docker load --input ezbookkeeping-synology-amd64-20261110-r9.tar
+docker image inspect ezbookkeeping:synology-amd64-20261110-r9 --format '{{.Os}}/{{.Architecture}}'
 docker compose -f compose.synology.yaml config --quiet
 docker compose -f compose.synology.yaml up -d
 ```
@@ -81,17 +82,19 @@ docker compose -f compose.synology.yaml up -d
 
 r7 的 393 × 852 移动视口模拟中，页面根视图与可视高度一致（852 px），dock 的 5 个入口及文字标签全部处于可视区域内。尚未在真实 iPhone 或群晖设备上实机验证。
 
+r9 在构建后的 `/mobile.html` 上加载 mobile CSS，并按 Framework7 实际的 `form > ul > li` 结构测量字段位置。390 × 844 和 320 × 667 视口下，金额、分类之后依次为交易时间、描述、地理位置、图片、账户、标签、交易时区；320 px 下各项均未超出视口宽度，页面没有横向溢出。浏览器打开的是无登录态页面，交易字段通过同结构 DOM fixture 测量，尚未在群晖或真实手机上验证。
+
 r8 桌面详情使用构建后的 CSS 实测字段布局位置：账单分类、交易时间、描述、地理位置、图片、账户、标签、交易时区，逐项位于上一项下方并占满一行。ESLint、Vue 类型检查和前端/PWA 生产构建通过。
 
-本次交付 tar 的 SHA-256 见对应 GitHub Release 附件的 `digest` 和发布说明。
+本次 r9 镜像 tar 的 SHA-256 见对应 GitHub Release 附件的 `digest` 和发布说明。
 
 传输后可计算并与发布说明核对（重新构建后哈希会改变）：
 
 ```sh
-sha256sum ezbookkeeping-synology-amd64-20261110-r8.tar
+sha256sum ezbookkeeping-synology-amd64-20261110-r9.tar
 ```
 
-macOS 可使用 `shasum -a 256 ezbookkeeping-synology-amd64-20261110-r8.tar`。
+macOS 可使用 `shasum -a 256 ezbookkeeping-synology-amd64-20261110-r9.tar`。
 
 在源码目录重建：
 
@@ -99,8 +102,8 @@ macOS 可使用 `shasum -a 256 ezbookkeeping-synology-amd64-20261110-r8.tar`。
 
 ```sh
 docker buildx build --platform linux/amd64 --file Dockerfile.synology \
-  --output type=docker,dest=ezbookkeeping-synology-amd64-20261110-r8.tar \
-  --tag ezbookkeeping:synology-amd64-20261110-r8 .
+  --output type=docker,dest=ezbookkeeping-synology-amd64-20261110-r9.tar \
+  --tag ezbookkeeping:synology-amd64-20261110-r9 .
 ```
 
 若 Homebrew 的 buildx 没注册为 Docker 插件，将 `docker buildx` 换成 `/opt/homebrew/bin/docker-buildx`。构建需要访问 Node、Alpine、npm 和 Go 下载源。
