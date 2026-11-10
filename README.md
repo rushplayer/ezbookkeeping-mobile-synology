@@ -6,6 +6,7 @@
 
 ## 界面改动
 
+- **r7 手机 dock**：移动端根视图跟随动态可视视口高度，避免 iPhone 浏览器可视区域变化时底部 dock 被裁切。
 - **r6 手机首页**：移除首页顶部居中的应用名文字，保留 navbar 容器和固定底部 dock。
 - **r4 电脑交易详情**：基本信息、图片、地理位置同页显示，去掉三项分页；分类与账户并排、收紧行距、描述按内容展开。照片直接显示缩略图并保留点击查看大图，有位置显示地图，无位置用短提示。保留交易类型、标签及编辑/删除/复制；手机端和新增/编辑布局沿用 r3。
 
@@ -22,7 +23,7 @@
 
 完整操作见 **[群晖部署说明](SYNOLOGY.md)**。
 
-**群晖已经运行 ezBookkeeping 时，只需导入定制镜像并替换原服务的映像，原端口、数据目录和配置继续使用，无须新建 `.env` 或重新填写设置。** 项目部署只将原 YAML 中的 `image` 改为 `ezbookkeeping:synology-amd64-20261110-r6`。新装示例仅供从零部署，不能覆盖已有配置。
+**群晖已经运行 ezBookkeeping 时，只需导入定制镜像并替换原服务的映像，原端口、数据目录和配置继续使用，无须新建 `.env` 或重新填写设置。** 项目部署只将原 YAML 中的 `image` 改为 `ezbookkeeping:synology-amd64-20261110-r7`。新装示例仅供从零部署，不能覆盖已有配置。
 
 | 文件 | 用途 |
 | --- | --- |
@@ -31,9 +32,9 @@
 | `.env.synology.example` | 群晖访问地址与固定密钥的配置模板，复制为 `.env` 后填写 |
 | `SYNOLOGY.md` | 镜像导入、目录权限、启动、升级与校验说明 |
 
-容器映像名：`ezbookkeeping:synology-amd64-20261110-r6`。容器内端口为 `8080`，运行身份为 UID/GID `1000:1000`。手机入口为 `http://群晖IP:8080/mobile`，桌面入口为 `/desktop`。图片功能需要正确配置浏览器实际访问的 `EBK_SERVER_ROOT_URL`。
+容器映像名：`ezbookkeeping:synology-amd64-20261110-r7`。容器内端口为 `8080`，运行身份为 UID/GID `1000:1000`。手机入口为 `http://群晖IP:8080/mobile`，桌面入口为 `/desktop`。图片功能需要正确配置浏览器实际访问的 `EBK_SERVER_ROOT_URL`。
 
-现成镜像见 **[最新版本下载](https://github.com/rushplayer/ezbookkeeping-mobile-synology/releases/latest)**，下载附件 `ezbookkeeping-synology-amd64-20261110-r6.tar` 后在 Container Manager 中从文件导入。
+现成镜像见 **[最新版本下载](https://github.com/rushplayer/ezbookkeeping-mobile-synology/releases/latest)**，下载附件 `ezbookkeeping-synology-amd64-20261110-r7.tar` 后在 Container Manager 中从文件导入。
 
 源码仓库不包含本地构建的镜像 tar、基础镜像归档、`node_modules`、数据库、上传图片或实际 `.env`。下载源码后可按下文重建；已有的本地交付文件仍保留在开发目录。
 
@@ -43,14 +44,15 @@
 
 ```sh
 docker buildx build --platform linux/amd64 --file Dockerfile.synology \
-  --output type=docker,dest=ezbookkeeping-synology-amd64-20261110-r6.tar \
-  --tag ezbookkeeping:synology-amd64-20261110-r6 .
+  --output type=docker,dest=ezbookkeeping-synology-amd64-20261110-r7.tar \
+  --tag ezbookkeeping:synology-amd64-20261110-r7 .
 ```
 
 若使用本工程开发时的 Colima 环境，先运行 `colima start --profile ezbookkeep`。若 Homebrew 的 Buildx 未注册为 Docker 插件，将 `docker buildx` 替换为 `/opt/homebrew/bin/docker-buildx`。
 
 ## 已完成的验证
 
+- r7：前端/PWA 生产构建通过。393 × 852 浏览器视口测试中，将 `html/body` 模拟为 900 px 高、可视区保持 852 px；Framework7 根视图和 dock 仍以 852 px 为底边，五个入口的图标与标签均在可视范围内。此为视口几何模拟，未在真实 iPhone 或群晖设备上实测。
 - r4：类型检查、修改文件的 ESLint、前端/PWA 生产构建通过。最终 linux/amd64 镜像网页显示提交号 2842ac9；在 1280 px 与 820 px 窗口检查同页照片和地图、无图片/位置的空状态、转账双金额与账户、多行描述、只读状态和编辑分页切换。图片上传、保存、读回与大图查看通过；手机端源码及后端业务代码未改。
 
 - r3：类型检查、修改文件的 ESLint 和 151 项金额、日期、偏好设置测试通过。最终镜像中实测 `85.27` 保存为 `8527` 最小货币单位，`10.29` 转账两边联动并保存；拒绝超限金额、非数字和多余小数，查看模式保持只读。

@@ -1,4 +1,11 @@
 /** Replacing the default style of framework7 **/
+@supports (height: 100dvh) {
+    #app > .framework7-root {
+        // Keep bottom toolbars inside the visible viewport when iOS browser chrome changes height.
+        height: 100dvh;
+    }
+}
+
 .ios .navbar-inner {
     padding-top: calc(8px + var(--f7-safe-area-top));
     padding-bottom: 8px;
