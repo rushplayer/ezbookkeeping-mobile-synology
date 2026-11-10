@@ -1,9 +1,5 @@
 <template>
     <f7-page class="mobile-home-page" @page:afterin="onPageAfterIn">
-        <f7-navbar>
-            <f7-nav-title :title="tt('global.app.title')"></f7-nav-title>
-        </f7-navbar>
-
         <overview-dashboard :layout="layout" :loading="loading" @navigate="onNavigate" />
 
         <f7-toolbar tabbar icons bottom class="main-tabbar">
